@@ -3,7 +3,7 @@
 //  NSProgress
 //
 //  Created by liuweizhen on 2018/12/4.
-//  Copyright © 2018 banma. All rights reserved.
+//  Copyright © 2018 daliu. All rights reserved.
 //
 
 #import "AppDelegate.h"

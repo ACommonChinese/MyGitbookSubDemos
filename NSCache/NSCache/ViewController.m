@@ -3,7 +3,7 @@
 //  NSCache
 //
 //  Created by liuweizhen on 2018/12/5.
-//  Copyright © 2018 banma. All rights reserved.
+//  Copyright © 2018 daliu. All rights reserved.
 //
 // 参考链接：https://www.jianshu.com/p/e850f8d120b0
 // https://www.jianshu.com/p/04ec045151c0
