@@ -10,6 +10,8 @@
 
 #define kLastModifiedImageURL @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559197432643&di=d99c5caa027c418d1995d1646e6f2c2e&imgtype=0&src=http%3A%2F%2Fpic15.nipic.com%2F20110628%2F1369025_192645024000_2.jpg"
 
+#define kETagImageURL @"http://img.daimg.com/uploads/allimg/110727/3-110HG133235Y.jpg"
+
 typedef void (^GetDataCompletion)(NSData *data);
 
 @interface ViewController ()
@@ -18,6 +20,8 @@ typedef void (^GetDataCompletion)(NSData *data);
 
 // 响应的 LastModified
 @property (nonatomic, copy) NSString *localLastModified;
+// 响应的 etag
+@property (nonatomic, copy) NSString *etag;
 
 @end
 
@@ -36,6 +40,7 @@ typedef void (^GetDataCompletion)(NSData *data);
     }];
 }
 
+// https://github.com/ACommonChinese/MyGitbookSubDemos/tree/master/LastModified_ETag
 - (void)getData:(GetDataCompletion)completion {
     NSURL *url = [NSURL URLWithString:kLastModifiedImageURL];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:15.0];
@@ -63,6 +68,53 @@ typedef void (^GetDataCompletion)(NSData *data);
         // 获取并且纪录 LastModified
         self.localLastModified = httpResponse.allHeaderFields[@"Last-Modified"];
         NSLog(@"localLastModified: %@", self.localLastModified);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            !completion ?: completion(data);
+        });
+    }];
+    [task resume];
+}
+
+
+- (IBAction)etag:(id)sender {
+    [self EtagGetData:^(NSData *data) {
+        if (data) {
+            self.imageView.image = [UIImage imageWithData:data];
+        }
+    }];
+}
+
+/*!
+ @brief 如果本地缓存资源为最新，则使用使用本地缓存。如果服务器已经更新或本地无缓存则从服务器请求资源。
+ 步骤：
+ 1. 请求是可变的，缓存策略要每次都从服务器加载
+ 2. 每次得到响应后，需要记录住 etag
+ 3. 下次发送请求的同时，将etag一起发送给服务器（由服务器比较内容是否发生变化）
+ */
+- (void)EtagGetData:(GetDataCompletion)completion {
+    NSURL *url = [NSURL URLWithString:kETagImageURL];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:15.0];
+    
+    // 发送 etag
+    if (self.etag.length > 0) {
+        [request setValue:self.etag forHTTPHeaderField:@"If-None-Match"];
+    }
+    
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+        NSLog(@"statusCode == %@", @(httpResponse.statusCode));
+        // 判断响应的状态码是否是 304 Not Modified （更多状态码含义解释： https://github.com/ChenYilong/iOSDevelopmentTips）
+        if (httpResponse.statusCode == 304) {
+            NSLog(@"加载本地缓存图片");
+            // 如果是，使用本地缓存
+            // 根据请求获取到`被缓存的响应`！
+            NSCachedURLResponse *cacheResponse =  [[NSURLCache sharedURLCache] cachedResponseForRequest:request];
+            // 拿到缓存的数据
+            data = cacheResponse.data;
+        }
+        // 获取并且纪录 etag，区分大小写
+        self.etag = httpResponse.allHeaderFields[@"Etag"];
+        NSLog(@"%@", self.etag);
         dispatch_async(dispatch_get_main_queue(), ^{
             !completion ?: completion(data);
         });
