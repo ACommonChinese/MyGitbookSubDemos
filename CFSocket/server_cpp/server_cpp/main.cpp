@@ -47,7 +47,7 @@ int main(int argc, const char * argv[]) {
     struct sockaddr_in serv_addr; // 套接字地址
     memset(&serv_addr, 0, sizeof(serv_addr)); // 每个字节都用0填充
     serv_addr.sin_family = AF_INET; // 使用IPv4地址
-    serv_addr.sin_addr.s_addr = inet_addr("30.16.104.56"); // IP地址
+    serv_addr.sin_addr.s_addr = inet_addr("30.16.108.149"); // IP地址
     serv_addr.sin_port = htons(1234); // 端口号
     /***
      htonl, htons, ntohl, ntohs -- convert values between host and network

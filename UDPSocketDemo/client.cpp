@@ -28,6 +28,7 @@ int main(int argc, const char * argv[]) {
     
     // 不断获取用户输入并发送给服务器，然后接受服务器数据
     struct sockaddr_in fromaddr;
+    
     size_t fromaddr_len = sizeof(fromaddr);
     
     while (1) {
@@ -38,7 +39,7 @@ int main(int argc, const char * argv[]) {
         ssize_t rec_len = recvfrom(sock, buffer, BUF_SIZE, 0, (struct sockaddr *)&fromaddr, (socklen_t *)&fromaddr_len);
         
         // buffer[rec_len] = {0};
-        printf("Message form server: %s - length: %ld字节\n", buffer, rec_len);
+        printf("Message form server: %s -- message: %s -- length: %ld字节\n",inet_ntoa(fromaddr.sin_addr), buffer, rec_len);
     }
     
     close(sock);
